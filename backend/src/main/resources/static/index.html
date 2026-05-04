@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>客户提交模式 - 社会痛点平台</title>
+  <link rel="stylesheet" href="/assets/site.css" />
+  <script>
+    window.APP_CONFIG = {
+      apiBase: ""
+    };
+  </script>
+  <script src="/assets/public.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/index.html">
+        <span class="brand-mark">客</span>
+        <span class="brand-copy">
+          <h1>客户提交模式</h1>
+          <p>只负责反馈提交，不展示后台功能</p>
+        </span>
+      </a>
+    </header>
+
+    <main>
+      <section class="panel page-banner">
+        <span class="kicker">客户提交入口</span>
+        <h2>这里专门给客户提交痛点，不和后台混在一起</h2>
+        <p>请直接填写问题场景、行业和内容。后台登录是另一套独立文件，不会出现在这个页面里。</p>
+      </section>
+
+      <section class="layout-two">
+        <article class="panel form-card">
+          <form data-feedback-form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="sceneType">场景类型</label>
+                <select id="sceneType" name="sceneType" data-scene-select required></select>
+              </div>
+              <div class="field">
+                <label for="industryType">所属行业</label>
+                <select id="industryType" name="industryType" data-industry-select required></select>
+              </div>
+              <div class="field">
+                <label for="contactWay">联系方式</label>
+                <select id="contactWay" name="contactWay" data-contact-select required></select>
+              </div>
+              <div class="field">
+                <label for="contactInfo">联系方式补充</label>
+                <input id="contactInfo" name="contactInfo" type="text" placeholder="手机号、邮箱或微信，匿名可留空" />
+              </div>
+              <div class="field">
+                <label for="content">痛点内容</label>
+                <textarea id="content" name="content" placeholder="请尽量说明遇到的问题、影响范围和希望改进的方向。" required></textarea>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn primary" type="submit">提交痛点</button>
+              <a class="btn secondary" href="#tips">查看填写提示</a>
+            </div>
+
+            <div class="status" data-feedback-status></div>
+            <div class="result-box" data-submit-result hidden></div>
+          </form>
+        </article>
+
+        <aside class="stack">
+          <article class="panel info-card" id="tips">
+            <h3 class="section-title">填写提示</h3>
+            <ul class="note-list">
+              <li>描述越具体，后续分类越准确。</li>
+              <li>如果不想留下联系方式，可以选择匿名。</li>
+              <li>页面会先从后端读取可选项，再渲染表单。</li>
+            </ul>
+          </article>
+
+          <article class="panel info-card">
+            <h3 class="section-title">当前表单配置</h3>
+            <div class="form-stats" data-form-stats>
+              <div class="form-stat">
+                <strong data-form-stat="sceneTypes">--</strong>
+                <span>场景类型</span>
+              </div>
+              <div class="form-stat">
+                <strong data-form-stat="industryTypes">--</strong>
+                <span>行业类型</span>
+              </div>
+              <div class="form-stat">
+                <strong data-form-stat="contactWays">--</strong>
+                <span>联系方式</span>
+              </div>
+            </div>
+          </article>
+        </aside>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

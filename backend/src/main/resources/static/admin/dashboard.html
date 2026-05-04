@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台控制台 - 社会痛点平台</title>
+  <link rel="stylesheet" href="/assets/site.css" />
+  <script>
+    window.APP_CONFIG = {
+      apiBase: ""
+    };
+  </script>
+  <script src="/assets/admin.js" defer></script>
+</head>
+<body>
+  <div class="shell" data-admin-dashboard>
+    <header class="topbar">
+      <a class="brand" href="/admin/dashboard.html">
+        <span class="brand-mark">后</span>
+        <span class="brand-copy">
+          <h1>后台控制台</h1>
+          <p data-admin-user>管理员</p>
+        </span>
+      </a>
+      <nav class="nav" aria-label="后台导航">
+        <a class="active" aria-current="page" href="/admin/dashboard.html">控制台</a>
+        <a href="javascript:void(0)" data-logout>退出登录</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="metric-strip" data-metric-strip>
+        <article class="panel metric-tile">
+          <h4>总提交量</h4>
+          <strong>--</strong>
+        </article>
+        <article class="panel metric-tile">
+          <h4>待处理</h4>
+          <strong>--</strong>
+        </article>
+        <article class="panel metric-tile">
+          <h4>分类数量</h4>
+          <strong>--</strong>
+        </article>
+        <article class="panel metric-tile">
+          <h4>行业覆盖</h4>
+          <strong>--</strong>
+        </article>
+      </section>
+
+      <div class="dashboard-grid" style="margin-top: 18px;">
+        <article class="panel admin-panel span-7">
+          <h3 class="section-title">最近提交</h3>
+          <div class="table-list" data-recent-reports>
+            <div class="empty-state">正在加载最近提交...</div>
+          </div>
+        </article>
+
+        <article class="panel admin-panel span-5">
+          <h3 class="section-title">分类统计</h3>
+          <div class="bar-list" data-category-bars>
+            <div class="empty-state">正在加载分类统计...</div>
+          </div>
+        </article>
+
+        <article class="panel admin-panel span-6">
+          <h3 class="section-title">行业统计</h3>
+          <div class="bar-list" data-industry-bars>
+            <div class="empty-state">正在加载行业统计...</div>
+          </div>
+        </article>
+
+        <article class="panel admin-panel span-6">
+          <div class="actions-inline" style="margin-bottom: 16px;">
+            <button class="btn primary" type="button" data-refresh-dashboard>刷新数据</button>
+            <button class="btn secondary" type="button" data-load-summary>生成报告摘要</button>
+          </div>
+          <div class="status" data-dashboard-status></div>
+          <div data-report-summary>
+            <div class="empty-state">点击“生成报告摘要”加载汇总内容。</div>
+          </div>
+        </article>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

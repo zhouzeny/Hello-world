@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: social-pain-point-platform-backend
+  jackson:
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: info
