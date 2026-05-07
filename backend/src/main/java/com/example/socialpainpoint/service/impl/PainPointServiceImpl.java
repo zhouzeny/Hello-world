@@ -63,7 +63,7 @@ public class PainPointServiceImpl implements PainPointService {
       encryptedContactInfo,
       LocalDateTime.now(),
       "待分类",
-      "未分类"
+      null
     ));
     operationLogRepository.save(null, "SUBMIT_PAIN_POINT", "pain_point_report:" + saved.id(), "public");
     return new SubmitResultVO("PP-" + saved.id());

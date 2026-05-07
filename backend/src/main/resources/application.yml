@@ -5,6 +5,11 @@ spring:
     time-zone: Asia/Shanghai
     serialization:
       write-dates-as-timestamps: false
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/social_pain_point?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
 server:
   port: 8080
@@ -12,3 +17,4 @@ server:
 logging:
   level:
     root: info
+    com.example.socialpainpoint: debug

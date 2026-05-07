@@ -30,7 +30,7 @@ export async function fetchFormConfig(): Promise<ApiResponse<FormConfig>> {
     };
   }
 
-  const { data } = await http.get<ApiResponse<FormConfig>>("/api/public/form-config");
+  const { data } = await http.get<ApiResponse<FormConfig>>("/public/form-config");
   return data;
 }
 
@@ -49,7 +49,7 @@ export async function submitPainPoint(
   }
 
   const { data } = await http.post<ApiResponse<{ id: string }>>(
-    "/api/public/pain-points",
+    "/public/pain-points",
     payload,
   );
   return data;

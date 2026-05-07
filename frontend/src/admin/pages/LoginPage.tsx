@@ -67,50 +67,59 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page">
-      <section className="card auth-card">
-        <div className="eyebrow">后台登录</div>
-        <h1>独立管理入口</h1>
+      <section className="auth-card">
+        <div className="brand-hw" style={{ textAlign: 'center', marginBottom: '8px' }}>Hello World</div>
+        <div className="eyebrow" style={{ margin: '0 auto 24px', display: 'flex' }}>管理后台认证</div>
+        
+        <h1>系统登录</h1>
         <p className="muted">{message}</p>
 
         <form className="form-grid" onSubmit={handleSubmit}>
-          <label className="field field-full">
-            <span>账号</span>
+          <label className="field">
+            <span>管理员账号</span>
             <input
               className="input"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              placeholder="admin"
+              placeholder="请输入账号"
+              autoFocus
             />
           </label>
 
-          <label className="field field-full">
-            <span>密码</span>
+          <label className="field">
+            <span>安全密码</span>
             <input
               className="input"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              placeholder="请输入密码"
             />
           </label>
 
-          <label className="field field-full">
-            <span>验证码</span>
-            <div className="button-row" style={{ alignItems: "center" }}>
+          <label className="field">
+            <span>验证码认证</span>
+            <div style={{ display: 'flex', gap: '12px' }}>
               <input
                 className="input"
                 value={captcha}
                 onChange={(event) => setCaptcha(event.target.value)}
-                placeholder="请输入验证码"
+                placeholder="4位验证码"
                 style={{ flex: 1 }}
               />
-              <button className="button button-ghost" type="button" onClick={refreshCaptcha}>
+              <button 
+                className="button-ghost" 
+                type="button" 
+                onClick={refreshCaptcha}
+                style={{ minWidth: '100px', height: '48px', borderRadius: '14px' }}
+              >
                 {captchaDisplay}
               </button>
             </div>
           </label>
 
-          <button className="button button-primary field-full" type="submit" disabled={loading}>
-            {loading ? "登录中..." : "登录后台"}
+          <button className="button-primary" type="submit" disabled={loading} style={{ marginTop: '10px' }}>
+            {loading ? "正在验证..." : "授权并登录"}
           </button>
         </form>
       </section>

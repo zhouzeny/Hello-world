@@ -2,137 +2,159 @@ package com.example.socialpainpoint.repository;
 
 import com.example.socialpainpoint.entity.PainPointReport;
 import com.example.socialpainpoint.exception.BizException;
-import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 
 @Component
 public class InMemoryPainPointRepository {
 
-  private final Map<Long, PainPointReport> store = new ConcurrentHashMap<>();
-  private final AtomicLong sequence = new AtomicLong(1004);
+  private final JdbcTemplate jdbc;
 
-  public InMemoryPainPointRepository() {
-    seed();
+  public InMemoryPainPointRepository(JdbcTemplate jdbc) {
+    this.jdbc = jdbc;
   }
 
   public List<PainPointReport> findAll() {
-    return store.values().stream()
-      .sorted(Comparator.comparing(PainPointReport::submitTime).reversed())
-      .toList();
+    return jdbc.query(
+      "SELECT * FROM pain_point_report ORDER BY submit_time DESC",
+      this::mapRow
+    );
   }
 
   public Optional<PainPointReport> findById(Long id) {
-    return Optional.ofNullable(store.get(id));
+    List<PainPointReport> results = jdbc.query(
+      "SELECT * FROM pain_point_report WHERE id = ?",
+      this::mapRow,
+      id
+    );
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
   }
 
   public PainPointReport save(PainPointReport report) {
-    Long id = report.id() == null ? sequence.getAndIncrement() : report.id();
-    PainPointReport stored = new PainPointReport(
-      id,
-      report.sceneType(),
-      report.industryType(),
-      report.content(),
-      report.contactWay(),
-      report.contactInfoEncrypted(),
-      report.submitTime(),
-      report.status(),
-      report.categoryName()
-    );
-    store.put(id, stored);
-    return stored;
+    if (report.id() != null) {
+      // Update existing
+      jdbc.update(
+        "UPDATE pain_point_report SET scene_type=?, industry_type=?, content=?, contact_way=?, contact_info_encrypted=?, submit_time=?, status=?, review_remark=? WHERE id=?",
+        report.sceneType(),
+        report.industryType(),
+        report.content(),
+        report.contactWay(),
+        report.contactInfoEncrypted(),
+        report.submitTime(),
+        0,
+        report.categoryName(),
+        report.id()
+      );
+      return report;
+    } else {
+      // Insert new
+      KeyHolder keyHolder = new GeneratedKeyHolder();
+      jdbc.update(con -> {
+        PreparedStatement ps = con.prepareStatement(
+          "INSERT INTO pain_point_report (scene_type, industry_type, content, contact_way, contact_info_encrypted, submit_time, status, review_remark) VALUES (?,?,?,?,?,?,?,?)",
+          Statement.RETURN_GENERATED_KEYS
+        );
+        ps.setString(1, report.sceneType());
+        ps.setString(2, report.industryType());
+        ps.setString(3, report.content());
+        ps.setString(4, report.contactWay());
+        ps.setString(5, report.contactInfoEncrypted());
+        ps.setObject(6, report.submitTime());
+        ps.setInt(7, 0); // 0 = 待审核
+        ps.setString(8, report.categoryName());
+        return ps;
+      }, keyHolder);
+      Long newId = keyHolder.getKey().longValue();
+      return new PainPointReport(
+        newId,
+        report.sceneType(),
+        report.industryType(),
+        report.content(),
+        report.contactWay(),
+        report.contactInfoEncrypted(),
+        report.submitTime(),
+        report.status(),
+        report.categoryName()
+      );
+    }
   }
 
   public PainPointReport updateCategory(Long id, String categoryName) {
-    PainPointReport current = findById(id).orElseThrow(() -> new BizException("痛点记录不存在"));
-    PainPointReport updated = new PainPointReport(
-      current.id(),
-      current.sceneType(),
-      current.industryType(),
-      current.content(),
-      current.contactWay(),
-      current.contactInfoEncrypted(),
-      current.submitTime(),
-      "已分类",
-      categoryName
+    findById(id).orElseThrow(() -> new BizException("痛点记录不存在"));
+    jdbc.update(
+      "UPDATE pain_point_report SET status=1, review_remark=? WHERE id=?",
+      categoryName,
+      id
     );
-    store.put(id, updated);
-    return updated;
+    return findById(id).orElseThrow();
   }
 
   public long countPending() {
-    return findAll().stream().filter(item -> !"已分类".equals(item.status())).count();
+    Long count = jdbc.queryForObject(
+      "SELECT COUNT(*) FROM pain_point_report WHERE status = 0",
+      Long.class
+    );
+    return count == null ? 0 : count;
   }
 
   public Map<String, Long> countByCategory() {
-    return findAll().stream()
-      .collect(Collectors.groupingBy(
-        item -> normalized(item.categoryName()),
-        Collectors.counting()
-      ));
+    return jdbc.query(
+      "SELECT COALESCE(NULLIF(review_remark,''), '未分类') AS cat, COUNT(*) AS cnt FROM pain_point_report GROUP BY cat",
+      rs -> {
+        Map<String, Long> map = new java.util.LinkedHashMap<>();
+        while (rs.next()) {
+          map.put(rs.getString("cat"), rs.getLong("cnt"));
+        }
+        return map;
+      }
+    );
   }
 
   public Map<String, Long> countByIndustry() {
-    return findAll().stream()
-      .collect(Collectors.groupingBy(
-        item -> normalized(item.industryType()),
-        Collectors.counting()
-      ));
+    return jdbc.query(
+      "SELECT COALESCE(NULLIF(industry_type,''), '其他') AS ind, COUNT(*) AS cnt FROM pain_point_report GROUP BY ind",
+      rs -> {
+        Map<String, Long> map = new java.util.LinkedHashMap<>();
+        while (rs.next()) {
+          map.put(rs.getString("ind"), rs.getLong("cnt"));
+        }
+        return map;
+      }
+    );
   }
 
   public List<PainPointReport> recent(int limit) {
-    return findAll().stream().limit(limit).toList();
+    return jdbc.query(
+      "SELECT * FROM pain_point_report ORDER BY submit_time DESC LIMIT ?",
+      this::mapRow,
+      limit
+    );
   }
 
-  private void seed() {
-    save(new PainPointReport(
-      1001L,
-      "生活类痛点",
-      "物业民生",
-      "小区夜间噪音较大，影响休息。",
-      "手机号",
-      encrypt("13800000001"),
-      LocalDateTime.of(2026, 5, 1, 9, 20, 0),
-      "已分类",
-      "环境噪音"
-    ));
-    save(new PainPointReport(
-      1002L,
-      "工作类痛点",
-      "职场办公",
-      "审批流程过长，跨部门沟通成本高。",
-      "邮箱",
-      encrypt("user@example.com"),
-      LocalDateTime.of(2026, 5, 1, 10, 10, 0),
-      "待分类",
-      "流程效率"
-    ));
-    save(new PainPointReport(
-      1003L,
-      "生活类痛点",
-      "交通出行",
-      "早高峰地铁换乘拥挤，通勤时间不稳定。",
-      "匿名",
-      "",
-      LocalDateTime.of(2026, 5, 1, 11, 5, 0),
-      "已分类",
-      "出行拥堵"
-    ));
-  }
-
-  private String encrypt(String value) {
-    return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
-  }
-
-  private String normalized(String value) {
-    return value == null || value.isBlank() ? "未分类" : value;
+  private PainPointReport mapRow(ResultSet rs, int rowNum) throws SQLException {
+    int statusInt = rs.getInt("status");
+    String statusStr = statusInt == 1 ? "已分类" : "待分类";
+    return new PainPointReport(
+      rs.getLong("id"),
+      rs.getString("scene_type"),
+      rs.getString("industry_type"),
+      rs.getString("content"),
+      rs.getString("contact_way"),
+      rs.getString("contact_info_encrypted"),
+      rs.getObject("submit_time", LocalDateTime.class),
+      statusStr,
+      rs.getString("review_remark")
+    );
   }
 }

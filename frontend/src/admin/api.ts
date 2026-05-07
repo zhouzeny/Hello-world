@@ -93,9 +93,29 @@ export async function fetchDashboardStats(): Promise<ApiResponse<DashboardStats>
 export async function fetchPainPointList(): Promise<ApiResponse<PainPointRow[]>> {
   if (useMockApi) {
     await sleep(100);
-    return { code: 0, message: "ok", data: mockPainPoints };
+    return { code: 0, message: "ok", data: [...mockPainPoints] };
   }
 
   const { data } = await http.get<ApiResponse<PainPointRow[]>>("/api/admin/pain-points");
+  return data;
+}
+
+export async function updatePainPoint(id: number, payload: Partial<PainPointRow>): Promise<ApiResponse<null>> {
+  if (useMockApi) {
+    await sleep(100);
+    return { code: 0, message: "ok", data: null };
+  }
+
+  const { data } = await http.patch<ApiResponse<null>>(`/api/admin/pain-points/${id}`, payload);
+  return data;
+}
+
+export async function deletePainPoint(id: number): Promise<ApiResponse<null>> {
+  if (useMockApi) {
+    await sleep(100);
+    return { code: 0, message: "ok", data: null };
+  }
+
+  const { data } = await http.delete<ApiResponse<null>>(`/api/admin/pain-points/${id}`);
   return data;
 }

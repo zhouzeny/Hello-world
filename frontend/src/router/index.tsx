@@ -15,7 +15,8 @@ export const router = createBrowserRouter([
         { path: "/submit", element: <SubmitPage /> },
         { path: "/success", element: <SuccessPage /> },
         { path: "/privacy", element: <PrivacyPage /> },
-      { path: "*", element: <Navigate to="/" replace /> },
-    ],
-  },
-]);
+        { path: "*", element: <Navigate to="/" replace /> },
+      ],
+    },
+  ],
+);

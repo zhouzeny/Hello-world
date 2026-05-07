@@ -6,16 +6,8 @@ import type { FormConfig, SubmitPainPointForm } from "@/types/api";
 const DEFAULT_FORM_CONFIG: FormConfig = {
   sceneTypes: ["生活类痛点", "工作类痛点"],
   industryTypes: [
-    "教育",
-    "医疗",
-    "职场办公",
-    "物业民生",
-    "交通出行",
-    "电商服务",
-    "餐饮服务",
-    "制造业",
-    "服务业",
-    "其他",
+    "教育", "医疗", "职场办公", "物业民生",
+    "交通出行", "电商服务", "餐饮服务", "制造业", "服务业", "其他",
   ],
   contactWays: ["匿名", "手机", "邮箱", "微信"],
 };
@@ -31,77 +23,64 @@ const emptyForm: SubmitPainPointForm = {
 function normalizeFormConfig(config?: Partial<FormConfig> | null): FormConfig {
   return {
     sceneTypes: config?.sceneTypes?.length ? config.sceneTypes : DEFAULT_FORM_CONFIG.sceneTypes,
-    industryTypes: config?.industryTypes?.length
-      ? config.industryTypes
-      : DEFAULT_FORM_CONFIG.industryTypes,
+    industryTypes: config?.industryTypes?.length ? config.industryTypes : DEFAULT_FORM_CONFIG.industryTypes,
     contactWays: config?.contactWays?.length ? config.contactWays : DEFAULT_FORM_CONFIG.contactWays,
   };
 }
+
+const STEPS = ["选择类型", "描述问题", "留下联系"];
 
 export default function SubmitPage() {
   const navigate = useNavigate();
   const [config, setConfig] = useState<FormConfig>(DEFAULT_FORM_CONFIG);
   const [form, setForm] = useState<SubmitPainPointForm>(emptyForm);
-  const [message, setMessage] = useState("请尽量用简洁、真实的方式描述问题。");
+  const [step, setStep] = useState(0);
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [charCount, setCharCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
-
     const loadConfig = async () => {
       try {
         const res = await fetchFormConfig();
         if (!mounted) return;
-
         const nextConfig = normalizeFormConfig(res?.data);
         setConfig(nextConfig);
-        setForm((current) => ({
-          ...current,
-          sceneType: current.sceneType || nextConfig.sceneTypes[0] || "",
-          industryType: current.industryType || nextConfig.industryTypes[0] || "",
-          contactWay: current.contactWay || nextConfig.contactWays[0] || "匿名",
+        setForm((cur) => ({
+          ...cur,
+          sceneType: cur.sceneType || nextConfig.sceneTypes[0] || "",
+          industryType: cur.industryType || nextConfig.industryTypes[0] || "",
+          contactWay: cur.contactWay || nextConfig.contactWays[0] || "匿名",
         }));
-
-        if (!res?.data || res.code !== 0) {
-          setMessage("表单配置已使用默认值。");
-        }
       } catch {
         if (!mounted) return;
-
         setConfig(DEFAULT_FORM_CONFIG);
-        setForm((current) => ({
-          ...current,
-          sceneType: current.sceneType || DEFAULT_FORM_CONFIG.sceneTypes[0] || "",
-          industryType: current.industryType || DEFAULT_FORM_CONFIG.industryTypes[0] || "",
-          contactWay: current.contactWay || DEFAULT_FORM_CONFIG.contactWays[0] || "匿名",
+        setForm((cur) => ({
+          ...cur,
+          sceneType: cur.sceneType || DEFAULT_FORM_CONFIG.sceneTypes[0] || "",
+          industryType: cur.industryType || DEFAULT_FORM_CONFIG.industryTypes[0] || "",
+          contactWay: cur.contactWay || DEFAULT_FORM_CONFIG.contactWays[0] || "匿名",
         }));
-        setMessage("表单配置加载失败，已使用默认选项。");
       }
     };
-
     loadConfig();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   const handleChange = (field: keyof SubmitPainPointForm, value: string) => {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((cur) => ({ ...cur, [field]: value }));
+    if (field === "content") setCharCount(value.length);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!form.content.trim()) { setMessage("请填写痛点内容后再提交。"); return; }
     setLoading(true);
     setMessage("正在提交，请稍候...");
-
     try {
       const result = await submitPainPoint(form);
-      if (result.code !== 0) {
-        setMessage(result.message);
-        return;
-      }
-
+      if (result.code !== 0) { setMessage(result.message); return; }
       navigate("/success", { state: { reportId: result.data.id } });
     } catch {
       setMessage("提交失败，请检查网络后重试。");
@@ -110,85 +89,154 @@ export default function SubmitPage() {
     }
   };
 
+  const showContact = form.contactWay !== "匿名";
+
   return (
-    <div className="card form-card">
-      <h1>痛点信息提交</h1>
-      <p className="muted">{message}</p>
+    <div className="sp-wrap">
+      {/* 页头 */}
+      <div className="sp-header">
+        <div className="eyebrow">我要反馈</div>
+        <h1 className="sp-title">提交你的社会痛点</h1>
+        <p className="sp-subtitle">请如实描述，匿名提交同样有效，每一条声音都有价值</p>
+      </div>
 
-      <form className="form-grid" onSubmit={handleSubmit}>
-        <label className="field">
-          <span>痛点场景</span>
-          <select
-            className="input"
-            value={form.sceneType}
-            onChange={(event) => handleChange("sceneType", event.target.value)}
+      {/* 步骤指示器 */}
+      <div className="sp-steps">
+        {STEPS.map((label, i) => (
+          <div
+            key={label}
+            className={`sp-step ${i === step ? "active" : ""} ${i < step ? "done" : ""}`}
+            onClick={() => i < step && setStep(i)}
           >
-            {config.sceneTypes.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
+            <div className="sp-step-dot">{i < step ? "✓" : i + 1}</div>
+            <span>{label}</span>
+          </div>
+        ))}
+        <div className="sp-step-line" style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }} />
+      </div>
 
-        <label className="field">
-          <span>所属行业</span>
-          <select
-            className="input"
-            value={form.industryType}
-            onChange={(event) => handleChange("industryType", event.target.value)}
-          >
-            {config.industryTypes.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
+      {/* 表单主体 */}
+      <form className="sp-form card" onSubmit={handleSubmit}>
 
-        <label className="field field-full">
-          <span>详细内容</span>
-          <textarea
-            className="input textarea"
-            rows={6}
-            value={form.content}
-            onChange={(event) => handleChange("content", event.target.value)}
-            placeholder="请描述你遇到的困难、问题、建议或诉求"
-          />
-        </label>
+        {/* Step 0 — 选择类型 */}
+        <div className={`sp-panel ${step === 0 ? "visible" : ""}`}>
+          <div className="sp-panel-title">选择痛点类型</div>
+          <div className="sp-row-2">
+            <div className="sp-field">
+              <label className="sp-label">痛点场景</label>
+              <div className="sp-chip-group">
+                {config.sceneTypes.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={`sp-chip ${form.sceneType === item ? "selected" : ""}`}
+                    onClick={() => handleChange("sceneType", item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="sp-field">
+              <label className="sp-label">所属行业</label>
+              <select
+                className="input sp-select"
+                value={form.industryType}
+                onChange={(e) => handleChange("industryType", e.target.value)}
+              >
+                {config.industryTypes.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="sp-nav-row">
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => { if (!form.sceneType) { setMessage("请先选择痛点场景"); return; } setMessage(""); setStep(1); }}
+            >
+              下一步 →
+            </button>
+          </div>
+        </div>
 
-        <label className="field">
-          <span>联系意愿</span>
-          <select
-            className="input"
-            value={form.contactWay}
-            onChange={(event) => handleChange("contactWay", event.target.value)}
-          >
-            {config.contactWays.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
+        {/* Step 1 — 描述问题 */}
+        <div className={`sp-panel ${step === 1 ? "visible" : ""}`}>
+          <div className="sp-panel-title">详细描述痛点</div>
+          <div className="sp-field">
+            <label className="sp-label">
+              问题描述
+              <span className="sp-char-count">{charCount} 字</span>
+            </label>
+            <textarea
+              className="input textarea sp-textarea"
+              rows={7}
+              value={form.content}
+              onChange={(e) => handleChange("content", e.target.value)}
+              placeholder="请描述你遇到的困难、问题、建议或诉求。越具体越有助于分析，建议 50 字以上。"
+            />
+          </div>
+          <div className="sp-nav-row">
+            <button type="button" className="button button-ghost" onClick={() => setStep(0)}>← 上一步</button>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => { if (!form.content.trim()) { setMessage("请填写痛点内容"); return; } setMessage(""); setStep(2); }}
+            >
+              下一步 →
+            </button>
+          </div>
+        </div>
 
-        <label className="field">
-          <span>联系方式（选填）</span>
-          <input
-            className="input"
-            value={form.contactInfo}
-            onChange={(event) => handleChange("contactInfo", event.target.value)}
-            placeholder="如手机号、邮箱、微信"
-          />
-        </label>
+        {/* Step 2 — 联系方式 */}
+        <div className={`sp-panel ${step === 2 ? "visible" : ""}`}>
+          <div className="sp-panel-title">留下联系方式（可选）</div>
+          <div className="sp-field">
+            <label className="sp-label">联系意愿</label>
+            <div className="sp-chip-group">
+              {config.contactWays.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={`sp-chip ${form.contactWay === item ? "selected" : ""}`}
+                  onClick={() => handleChange("contactWay", item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+          {showContact && (
+            <div className="sp-field sp-animate-in">
+              <label className="sp-label">联系信息</label>
+              <input
+                className="input"
+                value={form.contactInfo}
+                onChange={(e) => handleChange("contactInfo", e.target.value)}
+                placeholder={form.contactWay === "手机" ? "请输入手机号" : form.contactWay === "邮箱" ? "请输入邮箱" : "请输入微信号"}
+              />
+              <span className="sp-hint">联系信息将加密存储，仅授权人员可查看</span>
+            </div>
+          )}
 
-        <div className="button-row field-full">
-          <button className="button button-primary" type="submit" disabled={loading}>
-            {loading ? "提交中..." : "确认提交"}
-          </button>
-          <button className="button button-ghost" type="button" onClick={() => setForm(emptyForm)}>
-            重置内容
-          </button>
+          {/* 预览摘要 */}
+          <div className="sp-summary card">
+            <div className="sp-summary-title">提交内容预览</div>
+            <div className="sp-summary-row"><span>场景</span><strong>{form.sceneType || "—"}</strong></div>
+            <div className="sp-summary-row"><span>行业</span><strong>{form.industryType || "—"}</strong></div>
+            <div className="sp-summary-row"><span>内容</span><strong className="sp-summary-content">{form.content.slice(0, 60)}{form.content.length > 60 ? "…" : ""}</strong></div>
+            <div className="sp-summary-row"><span>联系</span><strong>{form.contactWay}</strong></div>
+          </div>
+
+          {message && <div className="sp-message">{message}</div>}
+
+          <div className="sp-nav-row">
+            <button type="button" className="button button-ghost" onClick={() => setStep(1)}>← 上一步</button>
+            <button className="button button-primary sp-submit-btn" type="submit" disabled={loading}>
+              {loading ? <span className="sp-loading">提交中…</span> : "确认提交 ✓"}
+            </button>
+          </div>
         </div>
       </form>
     </div>

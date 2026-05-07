@@ -17,40 +17,56 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-shell">
-      <aside className="sidebar card">
-        <div className="brand-block">
-          <div className="brand">后台管理</div>
-          <div className="subtitle">提交数据与统计分析</div>
+      {/* Sidebar */}
+      <aside className="admin-sidebar">
+        <div className="admin-brand">
+          <div className="brand-hw">Hello World</div>
+          <span>后台管理中心</span>
         </div>
 
-        <div className="token-box">
-          <span>登录状态</span>
-          <strong>{token ? "已登录" : "未登录"}</strong>
-        </div>
-
-        <nav className="side-links">
-          <NavLink to="/" end>
-            提交数据
+        <nav className="admin-nav">
+          <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <span className="nav-icon">📊</span>
+            <span>仪表盘</span>
+          </NavLink>
+          <NavLink to="/pain-points" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <span className="nav-icon">📝</span>
+            <span>痛点管理</span>
+          </NavLink>
+          <NavLink to="/stats" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <span className="nav-icon">📈</span>
+            <span>统计分析</span>
           </NavLink>
         </nav>
 
-        <button className="button button-ghost" type="button" onClick={handleLogout}>
-          退出登录
-        </button>
+        <div className="sidebar-footer">
+          <div className="user-status">
+            <div className="status-indicator"></div>
+            <span>管理员 (已登录)</span>
+          </div>
+          <button className="logout-btn" onClick={handleLogout}>
+            退出登录
+          </button>
+        </div>
       </aside>
 
-      <section className="admin-main">
-        <header className="topbar compact">
-          <div>
-            <div className="brand">后台数据中心</div>
-            <div className="subtitle">查看 frontend 提交记录</div>
+      {/* Main Content */}
+      <main className="admin-content">
+        <header className="admin-topbar">
+          <div className="breadcrumb">
+            管理系统 / <b>{window.location.pathname.split('/').filter(Boolean).pop() || '仪表盘'}</b>
+          </div>
+          <div className="topbar-actions">
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--admin-primary)', opacity: 0.8 }}>
+              ● 系统运行中
+            </span>
           </div>
         </header>
 
-        <div className="page-panel">
+        <div className="admin-main-view">
           <Outlet />
         </div>
-      </section>
+      </main>
     </div>
   );
 }
