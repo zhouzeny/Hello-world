@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -100,6 +99,20 @@ public class InMemoryPainPointRepository {
     return findById(id).orElseThrow();
   }
 
+  public PainPointReport updateStatus(Long id, int status) {
+    findById(id).orElseThrow(() -> new BizException("痛点记录不存在"));
+    jdbc.update(
+      "UPDATE pain_point_report SET status=? WHERE id=?",
+      status,
+      id
+    );
+    return findById(id).orElseThrow();
+  }
+
+  public void deleteById(Long id) {
+    jdbc.update("DELETE FROM pain_point_report WHERE id = ?", id);
+  }
+
   public long countPending() {
     Long count = jdbc.queryForObject(
       "SELECT COUNT(*) FROM pain_point_report WHERE status = 0",
@@ -108,9 +121,14 @@ public class InMemoryPainPointRepository {
     return count == null ? 0 : count;
   }
 
+  public long countAll() {
+    Long count = jdbc.queryForObject("SELECT COUNT(*) FROM pain_point_report", Long.class);
+    return count == null ? 0 : count;
+  }
+
   public Map<String, Long> countByCategory() {
     return jdbc.query(
-      "SELECT COALESCE(NULLIF(review_remark,''), '未分类') AS cat, COUNT(*) AS cnt FROM pain_point_report GROUP BY cat",
+      "SELECT scene_type AS cat, COUNT(*) AS cnt FROM pain_point_report GROUP BY scene_type",
       rs -> {
         Map<String, Long> map = new java.util.LinkedHashMap<>();
         while (rs.next()) {
@@ -144,7 +162,7 @@ public class InMemoryPainPointRepository {
 
   private PainPointReport mapRow(ResultSet rs, int rowNum) throws SQLException {
     int statusInt = rs.getInt("status");
-    String statusStr = statusInt == 1 ? "已分类" : "待分类";
+    String statusStr = statusInt == 1 ? "已处理" : "待处理";
     return new PainPointReport(
       rs.getLong("id"),
       rs.getString("scene_type"),

@@ -7,6 +7,17 @@ const ngrokAllowedHosts = [".ngrok-free.dev"];
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: 'rewrite-admin',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.startsWith('/admin') && !req.url.includes('.')) {
+            req.url = '/admin/index.html';
+          }
+          next();
+        });
+      }
+    }
   ],
   resolve: {
     alias: {

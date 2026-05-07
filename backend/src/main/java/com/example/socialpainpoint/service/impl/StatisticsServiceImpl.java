@@ -2,7 +2,6 @@ package com.example.socialpainpoint.service.impl;
 
 import com.example.socialpainpoint.repository.InMemoryPainPointRepository;
 import com.example.socialpainpoint.security.FieldCryptoService;
-import com.example.socialpainpoint.service.PainPointService;
 import com.example.socialpainpoint.service.StatisticsService;
 import com.example.socialpainpoint.util.TimeFormats;
 import com.example.socialpainpoint.vo.CategoryStatVO;
@@ -10,8 +9,6 @@ import com.example.socialpainpoint.vo.DashboardStatsVO;
 import com.example.socialpainpoint.vo.IndustryStatVO;
 import com.example.socialpainpoint.vo.PainPointVO;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,7 +31,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       .map(this::toVO)
       .toList();
     return new DashboardStatsVO(
-      painPointRepository.findAll().size(),
+      painPointRepository.countAll(),
       painPointRepository.countPending(),
       painPointRepository.countByCategory(),
       painPointRepository.countByIndustry(),

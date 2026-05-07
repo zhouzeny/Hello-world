@@ -106,8 +106,17 @@ export async function updatePainPoint(id: number, payload: Partial<PainPointRow>
     return { code: 0, message: "ok", data: null };
   }
 
-  const { data } = await http.patch<ApiResponse<null>>(`/api/admin/pain-points/${id}`, payload);
-  return data;
+  if (payload.status) {
+    const { data } = await http.patch<ApiResponse<null>>(`/api/admin/pain-points/${id}/status`, { status: payload.status });
+    return data;
+  }
+
+  if (payload.categoryName) {
+    const { data } = await http.put<ApiResponse<null>>(`/api/admin/pain-points/${id}/category`, { categoryName: payload.categoryName });
+    return data;
+  }
+
+  return { code: 1, message: "Unsupported update", data: null };
 }
 
 export async function deletePainPoint(id: number): Promise<ApiResponse<null>> {

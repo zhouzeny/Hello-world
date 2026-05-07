@@ -81,6 +81,20 @@ public class PainPointServiceImpl implements PainPointService {
     return toVO(updated);
   }
 
+  @Override
+  public PainPointVO updateStatus(Long id, String status) {
+    int statusInt = "已处理".equals(status) ? 1 : 0;
+    PainPointReport updated = painPointRepository.updateStatus(id, statusInt);
+    operationLogRepository.save(null, "UPDATE_STATUS", "pain_point_report:" + id + " to " + status, "admin");
+    return toVO(updated);
+  }
+
+  @Override
+  public void deleteById(Long id) {
+    painPointRepository.deleteById(id);
+    operationLogRepository.save(null, "DELETE_RECORD", "pain_point_report:" + id, "admin");
+  }
+
   private PainPointVO toVO(PainPointReport report) {
     return new PainPointVO(
       report.id(),

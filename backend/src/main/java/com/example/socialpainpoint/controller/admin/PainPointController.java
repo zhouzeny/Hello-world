@@ -35,4 +35,18 @@ public class PainPointController {
   ) {
     return ApiResponse.ok(painPointService.updateCategory(id, request.categoryName()));
   }
+
+  @org.springframework.web.bind.annotation.PatchMapping("/{id}/status")
+  public ApiResponse<PainPointVO> updateStatus(
+    @PathVariable Long id,
+    @RequestBody java.util.Map<String, String> body
+  ) {
+    return ApiResponse.ok(painPointService.updateStatus(id, body.get("status")));
+  }
+
+  @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+  public ApiResponse<String> delete(@PathVariable Long id) {
+    painPointService.deleteById(id);
+    return ApiResponse.ok("deleted");
+  }
 }

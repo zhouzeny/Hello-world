@@ -1,47 +1,79 @@
+import { useState, useEffect } from "react";
+import { fetchDashboardStats } from "../api";
+import type { DashboardStats } from "@/types/api";
+
 export default function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetchDashboardStats();
+        setStats(res.data);
+      } catch (e) {
+        console.error("Failed to fetch stats", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ padding: '100px', textAlign: 'center', color: 'var(--admin-muted)' }}>
+        <div className="status-indicator" style={{ margin: '0 auto 20px', width: '12px', height: '12px' }}></div>
+        <div style={{ fontWeight: 600 }}>正在加载系统实时概况...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-page">
       <header style={{ marginBottom: '36px' }}>
-        <div className="eyebrow" style={{ marginBottom: '12px' }}>数据统计中心</div>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>数据统计中心 / 实时同步</div>
         <h1 style={{ margin: '0 0 8px', fontSize: '34px', fontWeight: '900', letterSpacing: '-0.04em' }}>数据概览</h1>
-        <p style={{ margin: 0, color: 'var(--admin-muted)', fontSize: '15px', fontWeight: 500 }}>欢迎回来，系统当前运行平稳，所有模块均在线。</p>
+        <p style={{ margin: 0, color: 'var(--admin-muted)', fontSize: '15px', fontWeight: 500 }}>
+          对接后端实时数据，统计来自前台提交的每一份社会痛点。
+        </p>
       </header>
       
       <div className="stat-grid">
         <div className="stat-card">
-          <span className="stat-label">总提交量</span>
-          <div className="stat-value" style={{ color: 'var(--admin-primary)' }}>1,284</div>
+          <span className="stat-label">总提交量 (全库)</span>
+          <div className="stat-value" style={{ color: 'var(--admin-primary)' }}>{stats?.totalReports || 0}</div>
           <div style={{ marginTop: '12px', fontSize: '13px', fontWeight: 700, color: 'var(--admin-primary)' }}>
-            ↑ 12.5% <span style={{ color: 'var(--admin-muted)', fontWeight: 500 }}>较上月</span>
+            实时统计 <span style={{ color: 'var(--admin-muted)', fontWeight: 500 }}>前台提交总量</span>
           </div>
         </div>
         <div className="stat-card">
-          <span className="stat-label">今日新增</span>
-          <div className="stat-value" style={{ color: 'var(--admin-accent)' }}>42</div>
+          <span className="stat-label">行业覆盖</span>
+          <div className="stat-value" style={{ color: 'var(--admin-accent)' }}>{Object.keys(stats?.industryCounts || {}).length}</div>
           <div style={{ marginTop: '12px', fontSize: '13px', fontWeight: 700, color: 'var(--admin-accent)' }}>
-            ↑ 8.2% <span style={{ color: 'var(--admin-muted)', fontWeight: 500 }}>较昨日</span>
+            前台反馈 <span style={{ color: 'var(--admin-muted)', fontWeight: 500 }}>所属行业总数</span>
           </div>
         </div>
         <div className="stat-card">
-          <span className="stat-label">活跃用户</span>
-          <div className="stat-value">156</div>
-          <div style={{ marginTop: '12px', fontSize: '13px', fontWeight: 700, color: '#ef4444' }}>
-            ↓ 2.1% <span style={{ color: 'var(--admin-muted)', fontWeight: 500 }}>较上周</span>
+          <span className="stat-label">场景分布</span>
+          <div className="stat-value" style={{ fontSize: '24px' }}>{Object.keys(stats?.categoryCounts || {}).length}</div>
+          <div style={{ marginTop: '12px', fontSize: '13px', fontWeight: 700, color: 'var(--admin-primary)' }}>
+            已收集 <span style={{ color: 'var(--admin-muted)', fontWeight: 500 }}>种反馈场景</span>
           </div>
         </div>
         <div className="stat-card">
           <span className="stat-label">待处理记录</span>
-          <div className="stat-value">18</div>
+          <div className="stat-value" style={{ color: '#ef4444' }}>{stats?.pendingReports || 0}</div>
           <div style={{ marginTop: '12px' }}>
-            <span className="badge badge-pending">需优先关注</span>
+            <span className="badge badge-pending">需人工审核</span>
           </div>
         </div>
       </div>
 
       <div className="admin-card">
         <div className="card-header">
-          <h3>最近提交记录</h3>
-          <button className="button-ghost" style={{ fontSize: '13px' }}>
+          <h3>前台最近提交记录</h3>
+          <button className="button-ghost" style={{ fontSize: '13px' }} onClick={() => window.location.hash = "/pain-points"}>
             管理全部记录 →
           </button>
         </div>
@@ -50,30 +82,31 @@ export default function Dashboard() {
             <thead>
               <tr>
                 <th>提交时间</th>
-                <th>反馈场景</th>
-                <th>所属行业</th>
+                <th>场景</th>
+                <th>行业</th>
                 <th>处理状态</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>2026-05-07 10:24</td>
-                <td style={{ fontWeight: 700 }}>生活类痛点</td>
-                <td>医疗卫生</td>
-                <td><span className="badge badge-pending">待审核</span></td>
-              </tr>
-              <tr>
-                <td>2026-05-07 09:15</td>
-                <td style={{ fontWeight: 700 }}>工作类痛点</td>
-                <td>职场办公</td>
-                <td><span className="badge badge-processed">已处理</span></td>
-              </tr>
-              <tr>
-                <td>2026-05-06 22:30</td>
-                <td style={{ fontWeight: 700 }}>生活类痛点</td>
-                <td>物业民生</td>
-                <td><span className="badge badge-pending">待审核</span></td>
-              </tr>
+              {stats?.recentReports && stats.recentReports.length > 0 ? stats.recentReports.map(item => (
+                <tr key={item.id}>
+                  <td>{item.submitTime}</td>
+                  <td style={{ fontWeight: 700 }}>{item.sceneType}</td>
+                  <td>{item.industryType}</td>
+                  <td>
+                    <span className={`badge ${item.status === '待处理' ? 'badge-pending' : 'badge-processed'}`}>
+                      {item.status || '待处理'}
+                    </span>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: '60px', color: 'var(--admin-muted)' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.1 }}>📁</div>
+                    暂无前台提交记录
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

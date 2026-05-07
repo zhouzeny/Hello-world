@@ -15,4 +15,8 @@ public interface PainPointService {
   List<PainPointVO> listAll();
 
   PainPointVO updateCategory(Long id, String categoryName);
+
+  PainPointVO updateStatus(Long id, String status);
+
+  void deleteById(Long id);
 }
