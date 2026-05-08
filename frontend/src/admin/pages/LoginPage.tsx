@@ -5,7 +5,7 @@ import { getAuthToken, setAuthToken } from "../auth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("admin");
+  const [username, setUsername] = useState("yan123");
   const [password, setPassword] = useState("admin123");
   const [message, setMessage] = useState("请输入后台管理账号。");
   const [loading, setLoading] = useState(false);
