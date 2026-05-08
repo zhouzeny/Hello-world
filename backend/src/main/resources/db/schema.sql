@@ -90,7 +90,7 @@ CREATE TABLE `operation_log` (
 
 -- 插入默认管理员（密码: admin123，BCrypt加密）
 INSERT INTO `admin_user` (`username`, `password_hash`, `role`, `status`) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', 'super_admin', 1);
+('admin', '$2a$10$8.UnVuG9HHgffUDAlk8q7Ou5f2AFmyayIPVCxSUXtkF9X/O5TSWCG', 'super_admin', 1);
 
 -- 插入场景类型字典
 INSERT INTO `pain_point_category` (`category_name`, `category_type`, `sort_order`) VALUES

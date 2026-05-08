@@ -30,7 +30,7 @@ export default function Stats() {
   }
 
   const totalReports = stats?.totalReports || 1;
-  
+
   // 行业分布 (Industry)
   const industryStats = Object.entries(stats?.industryCounts || {}).map(([name, count]) => ({
     label: name,
@@ -39,12 +39,16 @@ export default function Stats() {
     color: 'var(--admin-primary)'
   })).sort((a, b) => b.count - a.count).slice(0, 5);
 
-  // 场景分布 (Scene)
-  const sceneStats = Object.entries(stats?.categoryCounts || {}).map(([name, count]) => ({
-    label: name,
-    val: Math.round((count / totalReports) * 100),
-    count: count,
-  })).sort((a, b) => b.count - a.count);
+  // 场景分布 (Scene) - 用于扇形图
+  const sceneStats = Object.entries(stats?.categoryCounts || {}).map(([name, count], index) => {
+    const colors = ['#2E7D67', '#3B8F7A', '#4AA58E', '#5BBBA0', '#6CCFB3', '#7DD5C6', '#8EECD9', '#9FF3EC'];
+    return {
+      label: name,
+      val: Math.round((count / totalReports) * 100),
+      count: count,
+      color: colors[index % colors.length],
+    };
+  }).sort((a, b) => b.count - a.count);
 
   return (
     <div className="stats-page">
@@ -71,10 +75,10 @@ export default function Stats() {
                   <span style={{ color: item.color }}>{item.count} 份 ({item.val}%)</span>
                 </div>
                 <div style={{ height: '10px', background: 'rgba(46, 125, 103, 0.05)', borderRadius: '12px', overflow: 'hidden' }}>
-                  <div 
-                    style={{ 
-                      width: `${item.val}%`, 
-                      height: '100%', 
+                  <div
+                    style={{
+                      width: `${item.val}%`,
+                      height: '100%',
                       background: item.color,
                       borderRadius: '12px'
                     }}
@@ -86,33 +90,64 @@ export default function Stats() {
           </div>
         </div>
 
-        {/* 场景热度卡片 */}
+        {/* 场景分布卡片 - 扇形图 */}
         <div className="admin-card" style={{ padding: '32px' }}>
           <div className="card-header">
             <h3>痛点场景分布 (Scene)</h3>
             <span style={{ fontSize: '12px', color: 'var(--admin-muted)', fontWeight: 600 }}>全量数据统计</span>
           </div>
-          <div style={{ height: '240px', display: 'flex', alignItems: 'flex-end', gap: '18px', paddingTop: '20px' }}>
-            {sceneStats.map((item, i) => {
-              const height = item.val;
-              return (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', height: '100%', justifyContent: 'flex-end' }}>
-                  <div 
-                    style={{ 
-                      width: '100%', 
-                      height: `${Math.max(height, 5)}%`, 
-                      background: 'linear-gradient(to top, var(--admin-primary), rgba(46, 125, 103, 0.1))',
-                      borderRadius: '12px 12px 6px 6px',
-                      boxShadow: '0 8px 20px rgba(46, 125, 103, 0.1)',
-                    }}
-                  ></div>
-                  <span style={{ fontSize: '11px', color: 'var(--admin-muted)', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', textAlign: 'center' }}>
-                    {item.label}
-                  </span>
+          <div style={{ height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
+            {sceneStats.length > 0 ? (
+              <>
+                <svg width="180" height="180" viewBox="0 0 100 100">
+                  {(() => {
+                    let cumulativeAngle = 0;
+                    return sceneStats.map((item) => {
+                      const startAngle = cumulativeAngle;
+                      const endAngle = cumulativeAngle + (item.val * 3.6);
+                      cumulativeAngle = endAngle;
+
+                      const startRad = (startAngle - 90) * (Math.PI / 180);
+                      const endRad = (endAngle - 90) * (Math.PI / 180);
+
+                      const x1 = 50 + 40 * Math.cos(startRad);
+                      const y1 = 50 + 40 * Math.sin(startRad);
+                      const x2 = 50 + 40 * Math.cos(endRad);
+                      const y2 = 50 + 40 * Math.sin(endRad);
+
+                      const largeArcFlag = item.val > 50 ? 1 : 0;
+
+                      return (
+                        <path
+                          key={item.label}
+                          d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
+                          fill={item.color}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      );
+                    });
+                  })()}
+                  <circle cx="50" cy="50" r="25" fill="white" />
+                  <text x="50" y="48" textAnchor="middle" fontSize="8" fill="var(--admin-text)" fontWeight="700">
+                    {stats?.totalReports || 0}
+                  </text>
+                  <text x="50" y="58" textAnchor="middle" fontSize="6" fill="var(--admin-muted)">
+                    总提交
+                  </text>
+                </svg>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {sceneStats.map((item) => (
+                    <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: item.color }}></div>
+                      <span style={{ flex: 1, fontSize: '13px', fontWeight: 600 }}>{item.label}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: item.color }}>{item.count} ({item.val}%)</span>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-            {sceneStats.length === 0 && <div style={{ width: '100%', textAlign: 'center', opacity: 0.5 }}>暂无场景数据</div>}
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', opacity: 0.5 }}>暂无场景数据</div>
+            )}
           </div>
         </div>
       </div>

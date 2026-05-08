@@ -29,3 +29,4 @@ public class StatisticsController {
     return ApiResponse.ok(statisticsService.industryStats());
   }
 }
+

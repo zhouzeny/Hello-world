@@ -43,7 +43,7 @@ const mockPainPoints: PainPointRow[] = mockStats.recentReports;
 export async function loginAdmin(payload: LoginForm): Promise<ApiResponse<AdminLoginResult>> {
   if (useMockApi) {
     await sleep(120);
-    if (payload.username === "admin" && payload.password === "Admin@123456") {
+    if (payload.username === "admin" && payload.password === "admin123") {
       return {
         code: 0,
         message: "ok",
@@ -66,7 +66,7 @@ export async function loginAdmin(payload: LoginForm): Promise<ApiResponse<AdminL
     };
   }
 
-  const { data } = await http.post<ApiResponse<AdminLoginResult>>("/api/admin/auth/login", payload);
+  const { data } = await http.post<ApiResponse<AdminLoginResult>>("/admin/auth/login", payload);
   return data;
 }
 
@@ -76,7 +76,7 @@ export async function logoutAdmin(): Promise<ApiResponse<string>> {
     return { code: 0, message: "ok", data: "已退出" };
   }
 
-  const { data } = await http.post<ApiResponse<string>>("/api/admin/auth/logout");
+  const { data } = await http.post<ApiResponse<string>>("/admin/auth/logout");
   return data;
 }
 
@@ -86,7 +86,7 @@ export async function fetchDashboardStats(): Promise<ApiResponse<DashboardStats>
     return { code: 0, message: "ok", data: mockStats };
   }
 
-  const { data } = await http.get<ApiResponse<DashboardStats>>("/api/admin/dashboard/stats");
+  const { data } = await http.get<ApiResponse<DashboardStats>>("/admin/dashboard/stats");
   return data;
 }
 
@@ -96,7 +96,7 @@ export async function fetchPainPointList(): Promise<ApiResponse<PainPointRow[]>>
     return { code: 0, message: "ok", data: [...mockPainPoints] };
   }
 
-  const { data } = await http.get<ApiResponse<PainPointRow[]>>("/api/admin/pain-points");
+  const { data } = await http.get<ApiResponse<PainPointRow[]>>("/admin/pain-points");
   return data;
 }
 
@@ -107,12 +107,12 @@ export async function updatePainPoint(id: number, payload: Partial<PainPointRow>
   }
 
   if (payload.status) {
-    const { data } = await http.patch<ApiResponse<null>>(`/api/admin/pain-points/${id}/status`, { status: payload.status });
+    const { data } = await http.patch<ApiResponse<null>>(`/admin/pain-points/${id}/status`, { status: payload.status });
     return data;
   }
 
   if (payload.categoryName) {
-    const { data } = await http.put<ApiResponse<null>>(`/api/admin/pain-points/${id}/category`, { categoryName: payload.categoryName });
+    const { data } = await http.put<ApiResponse<null>>(`/admin/pain-points/${id}/category`, { categoryName: payload.categoryName });
     return data;
   }
 
@@ -125,6 +125,6 @@ export async function deletePainPoint(id: number): Promise<ApiResponse<null>> {
     return { code: 0, message: "ok", data: null };
   }
 
-  const { data } = await http.delete<ApiResponse<null>>(`/api/admin/pain-points/${id}`);
+  const { data } = await http.delete<ApiResponse<null>>(`/admin/pain-points/${id}`);
   return data;
 }

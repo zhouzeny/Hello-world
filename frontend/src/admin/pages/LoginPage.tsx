@@ -1,21 +1,16 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginAdmin } from "../api";
 import { getAuthToken, setAuthToken } from "../auth";
 
-function createCaptcha() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-}
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("Admin@123456");
-  const [captcha, setCaptcha] = useState("");
-  const [captchaCode, setCaptchaCode] = useState(() => createCaptcha());
+  const [password, setPassword] = useState("admin123");
   const [message, setMessage] = useState("请输入后台管理账号。");
   const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (getAuthToken()) {
@@ -23,35 +18,16 @@ export default function LoginPage() {
     }
   }, [navigate]);
 
-  const captchaDisplay = useMemo(() => captchaCode, [captchaCode]);
-
-  const refreshCaptcha = () => {
-    setCaptchaCode(createCaptcha());
-    setCaptcha("");
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!captcha.trim()) {
-      setMessage("请输入验证码。");
-      return;
-    }
-
-    if (captcha.trim().toUpperCase() !== captchaCode) {
-      setMessage("验证码不正确，请刷新后重试。");
-      refreshCaptcha();
-      return;
-    }
 
     setLoading(true);
     setMessage("正在验证登录信息...");
 
     try {
-      const result = await loginAdmin({ username, password, captcha });
+      const result = await loginAdmin({ username, password });
       if (result.code !== 0) {
         setMessage(result.message);
-        refreshCaptcha();
         return;
       }
 
@@ -59,7 +35,6 @@ export default function LoginPage() {
       navigate("/", { replace: true });
     } catch {
       setMessage("登录失败，请稍后重试。");
-      refreshCaptcha();
     } finally {
       setLoading(false);
     }
@@ -88,32 +63,34 @@ export default function LoginPage() {
 
           <label className="field">
             <span>安全密码</span>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="请输入密码"
-            />
-          </label>
-
-          <label className="field">
-            <span>验证码认证</span>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ position: 'relative' }}>
               <input
                 className="input"
-                value={captcha}
-                onChange={(event) => setCaptcha(event.target.value)}
-                placeholder="4位验证码"
-                style={{ flex: 1 }}
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="请输入密码"
+                style={{ width: '100%', paddingRight: '50px' }}
               />
               <button 
-                className="button-ghost" 
-                type="button" 
-                onClick={refreshCaptcha}
-                style={{ minWidth: '100px', height: '48px', borderRadius: '14px' }}
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  padding: '4px',
+                  opacity: 0.5,
+                  transition: 'opacity 0.2s'
+                }}
               >
-                {captchaDisplay}
+                {showPassword ? "👁️" : "🔒"}
               </button>
             </div>
           </label>

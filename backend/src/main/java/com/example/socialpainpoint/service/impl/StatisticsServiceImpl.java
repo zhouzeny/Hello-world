@@ -9,6 +9,7 @@ import com.example.socialpainpoint.vo.DashboardStatsVO;
 import com.example.socialpainpoint.vo.IndustryStatVO;
 import com.example.socialpainpoint.vo.PainPointVO;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 @Service

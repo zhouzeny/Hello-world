@@ -18,7 +18,7 @@ export default function PainPoints() {
     setLoading(true);
     try {
       const res = await fetchPainPointList();
-      setList(res.data);
+      setList(res.data || []);
     } catch (e) {
       console.error("Failed to load pain points", e);
     } finally {
@@ -27,6 +27,7 @@ export default function PainPoints() {
   };
 
   const filteredList = useMemo(() => {
+    if (!Array.isArray(list)) return [];
     return list.filter(item => {
       const matchesSearch = 
         item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
