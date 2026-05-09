@@ -5,8 +5,6 @@ public record PainPointVO(
   String sceneType,
   String industryType,
   String content,
-  String contactWay,
-  String contactInfoMasked,
   String submitTime,
   String status,
   String categoryName

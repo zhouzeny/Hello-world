@@ -8,9 +8,6 @@ public record SubmitPainPointRequest(
   @NotBlank(message = "所属行业不能为空")
   String industryType,
   @NotBlank(message = "痛点内容不能为空")
-  String content,
-  @NotBlank(message = "联系意愿不能为空")
-  String contactWay,
-  String contactInfo
+  String content
 ) {
 }

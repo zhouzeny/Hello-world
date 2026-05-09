@@ -7,15 +7,12 @@ export interface ApiResponse<T> {
 export interface FormConfig {
   sceneTypes: string[];
   industryTypes: string[];
-  contactWays: string[];
 }
 
 export interface SubmitPainPointForm {
   sceneType: string;
   industryType: string;
   content: string;
-  contactWay: string;
-  contactInfo: string;
 }
 
 export interface LoginForm {
@@ -35,8 +32,6 @@ export interface PainPointRow {
   sceneType: string;
   industryType: string;
   content: string;
-  contactWay: string;
-  contactInfoMasked: string;
   submitTime: string;
   categoryName: string;
   status: string;

@@ -25,7 +25,6 @@ export async function fetchFormConfig(): Promise<ApiResponse<FormConfig>> {
           "服务业",
           "其他",
         ],
-        contactWays: ["匿名", "手机号", "邮箱", "微信"],
       },
     };
   }

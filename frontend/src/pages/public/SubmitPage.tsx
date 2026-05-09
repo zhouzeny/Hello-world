@@ -9,26 +9,22 @@ const DEFAULT_FORM_CONFIG: FormConfig = {
     "教育", "医疗", "职场办公", "物业民生",
     "交通出行", "电商服务", "餐饮服务", "制造业", "服务业", "其他",
   ],
-  contactWays: ["匿名", "手机", "邮箱", "微信"],
 };
 
 const emptyForm: SubmitPainPointForm = {
   sceneType: "",
   industryType: "",
   content: "",
-  contactWay: "匿名",
-  contactInfo: "",
 };
 
 function normalizeFormConfig(config?: Partial<FormConfig> | null): FormConfig {
   return {
     sceneTypes: config?.sceneTypes?.length ? config.sceneTypes : DEFAULT_FORM_CONFIG.sceneTypes,
     industryTypes: config?.industryTypes?.length ? config.industryTypes : DEFAULT_FORM_CONFIG.industryTypes,
-    contactWays: config?.contactWays?.length ? config.contactWays : DEFAULT_FORM_CONFIG.contactWays,
   };
 }
 
-const STEPS = ["选择类型", "描述问题", "留下联系"];
+const STEPS = ["选择类型", "描述问题"];
 
 export default function SubmitPage() {
   const navigate = useNavigate();
@@ -51,7 +47,6 @@ export default function SubmitPage() {
           ...cur,
           sceneType: cur.sceneType || nextConfig.sceneTypes[0] || "",
           industryType: cur.industryType || nextConfig.industryTypes[0] || "",
-          contactWay: cur.contactWay || nextConfig.contactWays[0] || "匿名",
         }));
       } catch {
         if (!mounted) return;
@@ -60,7 +55,6 @@ export default function SubmitPage() {
           ...cur,
           sceneType: cur.sceneType || DEFAULT_FORM_CONFIG.sceneTypes[0] || "",
           industryType: cur.industryType || DEFAULT_FORM_CONFIG.industryTypes[0] || "",
-          contactWay: cur.contactWay || DEFAULT_FORM_CONFIG.contactWays[0] || "匿名",
         }));
       }
     };
@@ -177,62 +171,17 @@ export default function SubmitPage() {
               placeholder="请描述你遇到的困难、问题、建议或诉求。越具体越有助于分析，建议 50 字以上。"
             />
           </div>
-          <div className="sp-nav-row">
-            <button type="button" className="button button-ghost" onClick={() => setStep(0)}>← 上一步</button>
-            <button
-              type="button"
-              className="button button-primary"
-              onClick={() => { if (!form.content.trim()) { setMessage("请填写痛点内容"); return; } setMessage(""); setStep(2); }}
-            >
-              下一步 →
-            </button>
-          </div>
-        </div>
-
-        {/* Step 2 — 联系方式 */}
-        <div className={`sp-panel ${step === 2 ? "visible" : ""}`}>
-          <div className="sp-panel-title">留下联系方式（可选）</div>
-          <div className="sp-field">
-            <label className="sp-label">联系意愿</label>
-            <div className="sp-chip-group">
-              {config.contactWays.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={`sp-chip ${form.contactWay === item ? "selected" : ""}`}
-                  onClick={() => handleChange("contactWay", item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-          {showContact && (
-            <div className="sp-field sp-animate-in">
-              <label className="sp-label">联系信息</label>
-              <input
-                className="input"
-                value={form.contactInfo}
-                onChange={(e) => handleChange("contactInfo", e.target.value)}
-                placeholder={form.contactWay === "手机" ? "请输入手机号" : form.contactWay === "邮箱" ? "请输入邮箱" : "请输入微信号"}
-              />
-              <span className="sp-hint">联系信息将加密存储，仅授权人员可查看</span>
-            </div>
-          )}
-
-          {/* 预览摘要 */}
           <div className="sp-summary card">
             <div className="sp-summary-title">提交内容预览</div>
             <div className="sp-summary-row"><span>场景</span><strong>{form.sceneType || "—"}</strong></div>
             <div className="sp-summary-row"><span>行业</span><strong>{form.industryType || "—"}</strong></div>
             <div className="sp-summary-row"><span>内容</span><strong className="sp-summary-content">{form.content.slice(0, 60)}{form.content.length > 60 ? "…" : ""}</strong></div>
-            <div className="sp-summary-row"><span>联系</span><strong>{form.contactWay}</strong></div>
           </div>
 
           {message && <div className="sp-message">{message}</div>}
 
           <div className="sp-nav-row">
-            <button type="button" className="button button-ghost" onClick={() => setStep(1)}>← 上一步</button>
+            <button type="button" className="button button-ghost" onClick={() => setStep(0)}>← 上一步</button>
             <button className="button button-primary sp-submit-btn" type="submit" disabled={loading}>
               {loading ? <span className="sp-loading">提交中…</span> : "确认提交 ✓"}
             </button>

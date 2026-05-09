@@ -42,14 +42,11 @@ public class InMemoryPainPointRepository {
 
   public PainPointReport save(PainPointReport report) {
     if (report.id() != null) {
-      // Update existing
       jdbc.update(
-        "UPDATE pain_point_report SET scene_type=?, industry_type=?, content=?, contact_way=?, contact_info_encrypted=?, submit_time=?, status=?, review_remark=? WHERE id=?",
+        "UPDATE pain_point_report SET scene_type=?, industry_type=?, content=?, submit_time=?, status=?, review_remark=? WHERE id=?",
         report.sceneType(),
         report.industryType(),
         report.content(),
-        report.contactWay(),
-        report.contactInfoEncrypted(),
         report.submitTime(),
         0,
         report.categoryName(),
@@ -57,21 +54,18 @@ public class InMemoryPainPointRepository {
       );
       return report;
     } else {
-      // Insert new
       KeyHolder keyHolder = new GeneratedKeyHolder();
       jdbc.update(con -> {
         PreparedStatement ps = con.prepareStatement(
-          "INSERT INTO pain_point_report (scene_type, industry_type, content, contact_way, contact_info_encrypted, submit_time, status, review_remark) VALUES (?,?,?,?,?,?,?,?)",
+          "INSERT INTO pain_point_report (scene_type, industry_type, content, submit_time, status, review_remark) VALUES (?,?,?,?,?,?)",
           Statement.RETURN_GENERATED_KEYS
         );
         ps.setString(1, report.sceneType());
         ps.setString(2, report.industryType());
         ps.setString(3, report.content());
-        ps.setString(4, report.contactWay());
-        ps.setString(5, report.contactInfoEncrypted());
-        ps.setObject(6, report.submitTime());
-        ps.setInt(7, 0); // 0 = 待审核
-        ps.setString(8, report.categoryName());
+        ps.setObject(4, report.submitTime());
+        ps.setInt(5, 0);
+        ps.setString(6, report.categoryName());
         return ps;
       }, keyHolder);
       Long newId = keyHolder.getKey().longValue();
@@ -80,8 +74,6 @@ public class InMemoryPainPointRepository {
         report.sceneType(),
         report.industryType(),
         report.content(),
-        report.contactWay(),
-        report.contactInfoEncrypted(),
         report.submitTime(),
         report.status(),
         report.categoryName()
@@ -168,8 +160,6 @@ public class InMemoryPainPointRepository {
       rs.getString("scene_type"),
       rs.getString("industry_type"),
       rs.getString("content"),
-      rs.getString("contact_way"),
-      rs.getString("contact_info_encrypted"),
       rs.getObject("submit_time", LocalDateTime.class),
       statusStr,
       rs.getString("review_remark")

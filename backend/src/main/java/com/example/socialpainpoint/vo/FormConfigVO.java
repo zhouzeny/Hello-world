@@ -4,7 +4,6 @@ import java.util.List;
 
 public record FormConfigVO(
   List<String> sceneTypes,
-  List<String> industryTypes,
-  List<String> contactWays
+  List<String> industryTypes
 ) {
 }

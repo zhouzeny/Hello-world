@@ -7,8 +7,6 @@ public record PainPointReport(
   String sceneType,
   String industryType,
   String content,
-  String contactWay,
-  String contactInfoEncrypted,
   LocalDateTime submitTime,
   String status,
   String categoryName

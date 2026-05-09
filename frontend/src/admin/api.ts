@@ -29,8 +29,6 @@ const mockStats: DashboardStats = {
       sceneType: "生活类痛点",
       industryType: "物业民生",
       content: "小区夜间噪音较大，影响休息。",
-      contactWay: "匿名",
-      contactInfoMasked: "匿名",
       submitTime: "2026-05-03 09:10:00",
       categoryName: "环境噪音",
       status: "待处理",
@@ -127,4 +125,47 @@ export async function deletePainPoint(id: number): Promise<ApiResponse<null>> {
 
   const { data } = await http.delete<ApiResponse<null>>(`/admin/pain-points/${id}`);
   return data;
+}
+
+export async function exportToExcel() {
+  if (useMockApi) {
+    await sleep(100);
+    return;
+  }
+
+  try {
+    const response = await http.get("/admin/reports/export/excel", {
+      responseType: "blob",
+    });
+
+    if (!response.data || response.data.size === 0) {
+      throw new Error("导出的数据为空");
+    }
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    
+    const contentDisposition = response.headers["content-disposition"] || response.headers["Content-Disposition"];
+    let filename = "痛点数据.xlsx";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (match && match[1]) {
+        filename = match[1].replace(/['"]/g, "");
+      }
+    }
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+  } catch (error) {
+    console.error("导出失败:", error);
+    throw error;
+  }
 }

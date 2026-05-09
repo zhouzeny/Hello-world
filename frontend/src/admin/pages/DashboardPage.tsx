@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchDashboardStats, fetchPainPointList } from "../api";
+import { fetchDashboardStats, fetchPainPointList, exportToExcel } from "../api";
 import { clearAuthToken, getAuthToken } from "../auth";
 import StatCard from "../components/StatCard";
 import type { DashboardStats, PainPointRow } from "@/types/api";
@@ -10,6 +10,20 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [painPoints, setPainPoints] = useState<PainPointRow[]>([]);
   const [message, setMessage] = useState("正在加载提交数据...");
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportToExcel();
+      setMessage("数据导出成功！");
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "导出失败";
+      setMessage(text);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -89,9 +103,19 @@ export default function DashboardPage() {
       <section className="card">
         <div className="button-row" style={{ justifyContent: "space-between" }}>
           <h2 style={{ margin: 0 }}>提交数据</h2>
-          <button className="button button-ghost" type="button" onClick={loadData}>
-            刷新数据
-          </button>
+          <div className="button-group">
+            <button className="button button-ghost" type="button" onClick={loadData}>
+              刷新数据
+            </button>
+            <button 
+              className="button button-primary" 
+              type="button" 
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? "导出中..." : "导出数据"}
+            </button>
+          </div>
         </div>
         <p className="muted">{message}</p>
 
@@ -102,7 +126,6 @@ export default function DashboardPage() {
                 <th>ID</th>
                 <th>场景</th>
                 <th>行业</th>
-                <th>联系方式</th>
                 <th>内容</th>
                 <th>时间</th>
                 <th>状态</th>
@@ -115,7 +138,6 @@ export default function DashboardPage() {
                   <td>{item.id}</td>
                   <td>{item.sceneType}</td>
                   <td>{item.industryType}</td>
-                  <td>{item.contactInfoMasked || item.contactWay}</td>
                   <td>{item.content}</td>
                   <td>{item.submitTime}</td>
                   <td>{item.status}</td>

@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const stats = [
   { value: "10K+", label: "收集痛点" },
@@ -11,7 +12,7 @@ const features = [
   {
     icon: "✦",
     title: "无门槛提交",
-    desc: "无需注册，30 秒完成反馈，支持匿名提交，保护个人隐私。",
+    desc: "无需注册，30 秒完成反馈，完全匿名提交，保护个人隐私。",
   },
   {
     icon: "◈",
@@ -26,11 +27,23 @@ const features = [
   {
     icon: "◎",
     title: "隐私优先设计",
-    desc: "联系信息加密存储，审核人员无法直接查看原始内容。",
+    desc: "数据已完成法律意义上的匿名化处理，不含任何个人标识信息。",
   },
 ];
 
 export default function HomePage() {
+  const navigate = useNavigate();
+  const [showComplianceModal, setShowComplianceModal] = useState(false);
+
+  const handleSubmitClick = () => {
+    setShowComplianceModal(true);
+  };
+
+  const handleConfirmCompliance = () => {
+    setShowComplianceModal(false);
+    navigate("/submit");
+  };
+
   return (
     <div className="home-wrap">
       {/* ── Hero ── */}
@@ -46,9 +59,9 @@ export default function HomePage() {
             我们将你的声音结构化，呈递给能改变它的人。
           </p>
           <div className="button-row">
-            <Link className="button button-primary hw-cta" to="/submit">
+            <button className="button button-primary hw-cta" onClick={handleSubmitClick}>
               立即提交痛点 →
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -86,6 +99,35 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* 数据合规声明弹窗 */}
+      {showComplianceModal && (
+        <div className="compliance-modal-overlay" onClick={() => setShowComplianceModal(false)}>
+          <div className="compliance-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="compliance-modal-header">
+              <div className="compliance-modal-icon">📋</div>
+              <h2>本网站数据合规声明</h2>
+            </div>
+            <div className="compliance-modal-content">
+              <ul className="compliance-list">
+                <li>本平台收集、存储、共享的所有生活/工作痛点文本、行业汇总数据，已完成法律意义上的匿名化处理。</li>
+                <li>数据不含任何可识别自然人的信息：无姓名、手机号、微信、邮箱、住址、公司、工号、IP、设备 ID、定位、照片等任何个人标识。</li>
+                <li>数据无法通过任何技术、组合、关联方式还原、定位到特定个人，不具备可复原性。</li>
+                <li>所有数据仅为共性痛点、场景描述、行业问题汇总，不指向、不关联任何具体自然人。</li>
+                <li>本数据不属于个人信息，符合《个人信息保护法》《民法典》关于匿名化数据的规定，可合法对外共享、使用、研究、商业转化。</li>
+              </ul>
+            </div>
+            <div className="compliance-modal-footer">
+              <button className="button button-ghost" onClick={() => setShowComplianceModal(false)}>
+                取消
+              </button>
+              <button className="button button-primary" onClick={handleConfirmCompliance}>
+                我已知晓并同意
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
