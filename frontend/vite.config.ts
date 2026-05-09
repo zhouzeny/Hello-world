@@ -8,11 +8,11 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'rewrite-admin',
+      name: 'rewrite-myshtdgly',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (req.url?.startsWith('/admin') && !req.url.includes('.')) {
-            req.url = '/admin/index.html';
+          if (req.url?.startsWith('/myshtdgly') && !req.url.includes('.')) {
+            req.url = '/myshtdgly/index.html';
           }
           next();
         });
@@ -28,7 +28,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL("./index.html", import.meta.url)),
-        admin: fileURLToPath(new URL("./admin/index.html", import.meta.url)),
+        myshtdgly: fileURLToPath(new URL("./myshtdgly/index.html", import.meta.url)),
       },
     },
   },

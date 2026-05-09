@@ -232,7 +232,7 @@
     } catch (error) {
       if ((error.message || "").includes("登录")) {
         clearSession();
-        window.location.replace("/admin/login.html");
+        window.location.replace("/myshtdgly/login.html");
         return;
       }
 
@@ -247,7 +247,7 @@
     }
 
     if (!getToken()) {
-      window.location.replace("/admin/login.html");
+      window.location.replace("/myshtdgly/login.html");
       return;
     }
 
@@ -285,7 +285,7 @@
           // Logout should still complete locally even if the server side token is already gone.
         } finally {
           clearSession();
-          window.location.replace("/admin/login.html");
+          window.location.replace("/myshtdgly/login.html");
         }
       });
     }
@@ -317,7 +317,7 @@
     }
 
     if (getToken()) {
-      window.location.replace("/admin/dashboard.html");
+      window.location.replace("/myshtdgly/dashboard.html");
       return;
     }
 
@@ -359,7 +359,7 @@
 
         setSession(data);
         setMessage(status, "success", "登录成功，正在进入后台...");
-        window.location.replace("/admin/dashboard.html");
+        window.location.replace("/myshtdgly/dashboard.html");
       } catch (error) {
         setMessage(status, "error", error.message || "登录失败");
         refreshCaptcha();

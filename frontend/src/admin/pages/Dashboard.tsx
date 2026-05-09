@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchDashboardStats } from "../api";
 import type { DashboardStats } from "@/types/api";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +75,11 @@ export default function Dashboard() {
       <div className="admin-card">
         <div className="card-header">
           <h3>前台最近提交记录</h3>
-          <button className="button-ghost" style={{ fontSize: '13px' }} onClick={() => window.location.hash = "/pain-points"}>
+          <button
+            className="button-ghost"
+            style={{ fontSize: '13px' }}
+            onClick={() => navigate("/pain-points")}
+          >
             管理全部记录 →
           </button>
         </div>
