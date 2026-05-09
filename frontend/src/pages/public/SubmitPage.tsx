@@ -83,8 +83,6 @@ export default function SubmitPage() {
     }
   };
 
-  const showContact = form.contactWay !== "匿名";
-
   return (
     <div className="sp-wrap">
       {/* 页头 */}

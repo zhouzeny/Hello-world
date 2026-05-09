@@ -18,7 +18,6 @@ export interface SubmitPainPointForm {
 export interface LoginForm {
   username: string;
   password: string;
-  captcha: string;
 }
 
 export interface AdminLoginResult {

@@ -212,8 +212,8 @@ export default function PainPoints() {
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div style={{ background: 'rgba(255,255,255,0.5)', padding: '16px', borderRadius: '16px', border: '1px solid var(--admin-border)' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--admin-muted)', marginBottom: '4px' }}>联系方式</div>
-                  <div style={{ fontWeight: 700 }}>{selectedItem.contactWay}</div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--admin-muted)', marginBottom: '4px' }}>分类</div>
+                  <div style={{ fontWeight: 700 }}>{selectedItem.categoryName || '待分类'}</div>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.5)', padding: '16px', borderRadius: '16px', border: '1px solid var(--admin-border)' }}>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--admin-muted)', marginBottom: '4px' }}>提交时间</div>
