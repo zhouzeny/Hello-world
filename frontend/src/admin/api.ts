@@ -1,4 +1,4 @@
-import { http } from "@/api/http";
+import axios, { AxiosHeaders } from "axios";
 import type {
   AdminLoginResult,
   ApiResponse,
@@ -14,14 +14,14 @@ const mockStats: DashboardStats = {
   totalReports: 12,
   pendingReports: 3,
   categoryCounts: {
-    "流程效率": 5,
-    "环境噪音": 4,
-    "出行拥堵": 3,
+    流程效率: 5,
+    环境噪音: 4,
+    出行拥堵: 3,
   },
   industryCounts: {
-    "物业民生": 6,
-    "职场办公": 4,
-    "交通出行": 2,
+    物业民生: 6,
+    职场办公: 4,
+    交通出行: 2,
   },
   recentReports: [
     {
@@ -37,6 +37,97 @@ const mockStats: DashboardStats = {
 };
 
 const mockPainPoints: PainPointRow[] = mockStats.recentReports;
+
+export const httpAdmin = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api",
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+httpAdmin.interceptors.request.use((config) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("social_pain_point_token") : null;
+  config.headers = AxiosHeaders.from(config.headers);
+
+  if (token) {
+    config.headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return config;
+});
+
+async function downloadResponseAsFile(
+  path: string,
+  defaultFilename: string,
+  defaultMimeType: string,
+  params?: Record<string, string>,
+) {
+  const response = await httpAdmin.get(path, {
+    params,
+    responseType: "blob",
+    validateStatus: () => true,
+  });
+
+  const headers = response.headers as Record<string, string | undefined>;
+  const contentType = String(headers["content-type"] ?? headers["Content-Type"] ?? "").toLowerCase();
+
+  if (contentType.includes("application/json") || contentType.includes("text/json")) {
+    const errorText = await response.data.text();
+    let message = "导出失败";
+
+    if (errorText) {
+      try {
+        const payload = JSON.parse(errorText) as { message?: string };
+        message = payload.message || message;
+      } catch {
+        message = errorText;
+      }
+    }
+
+    throw new Error(message);
+  }
+
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(`导出失败，HTTP ${response.status}`);
+  }
+
+  if (!response.data || response.data.size === 0) {
+    throw new Error("导出的数据为空");
+  }
+
+  const blob =
+    response.data instanceof Blob ? response.data : new Blob([response.data], { type: defaultMimeType });
+
+  const contentDisposition = headers["content-disposition"] ?? headers["Content-Disposition"];
+  let filename = defaultFilename;
+
+  if (contentDisposition) {
+    const utf8Match = contentDisposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+      try {
+        filename = decodeURIComponent(utf8Match[1]);
+      } catch {
+        filename = utf8Match[1];
+      }
+    } else {
+      const plainMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
+      if (plainMatch?.[1]) {
+        filename = plainMatch[1].replace(/['"]/g, "");
+      }
+    }
+  }
+
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+}
 
 export async function loginAdmin(payload: LoginForm): Promise<ApiResponse<AdminLoginResult>> {
   if (useMockApi) {
@@ -64,7 +155,7 @@ export async function loginAdmin(payload: LoginForm): Promise<ApiResponse<AdminL
     };
   }
 
-  const { data } = await http.post<ApiResponse<AdminLoginResult>>("/admin/auth/login", payload);
+  const { data } = await httpAdmin.post<ApiResponse<AdminLoginResult>>("/admin/auth/login", payload);
   return data;
 }
 
@@ -74,7 +165,7 @@ export async function logoutAdmin(): Promise<ApiResponse<string>> {
     return { code: 0, message: "ok", data: "已退出" };
   }
 
-  const { data } = await http.post<ApiResponse<string>>("/admin/auth/logout");
+  const { data } = await httpAdmin.post<ApiResponse<string>>("/admin/auth/logout");
   return data;
 }
 
@@ -84,7 +175,7 @@ export async function fetchDashboardStats(): Promise<ApiResponse<DashboardStats>
     return { code: 0, message: "ok", data: mockStats };
   }
 
-  const { data } = await http.get<ApiResponse<DashboardStats>>("/admin/dashboard/stats");
+  const { data } = await httpAdmin.get<ApiResponse<DashboardStats>>("/admin/dashboard/stats");
   return data;
 }
 
@@ -94,7 +185,7 @@ export async function fetchPainPointList(): Promise<ApiResponse<PainPointRow[]>>
     return { code: 0, message: "ok", data: [...mockPainPoints] };
   }
 
-  const { data } = await http.get<ApiResponse<PainPointRow[]>>("/admin/pain-points");
+  const { data } = await httpAdmin.get<ApiResponse<PainPointRow[]>>("/admin/pain-points");
   return data;
 }
 
@@ -105,12 +196,16 @@ export async function updatePainPoint(id: number, payload: Partial<PainPointRow>
   }
 
   if (payload.status) {
-    const { data } = await http.patch<ApiResponse<null>>(`/admin/pain-points/${id}/status`, { status: payload.status });
+    const { data } = await httpAdmin.patch<ApiResponse<null>>(`/admin/pain-points/${id}/status`, {
+      status: payload.status,
+    });
     return data;
   }
 
   if (payload.categoryName) {
-    const { data } = await http.put<ApiResponse<null>>(`/admin/pain-points/${id}/category`, { categoryName: payload.categoryName });
+    const { data } = await httpAdmin.put<ApiResponse<null>>(`/admin/pain-points/${id}/category`, {
+      categoryName: payload.categoryName,
+    });
     return data;
   }
 
@@ -123,7 +218,7 @@ export async function deletePainPoint(id: number): Promise<ApiResponse<null>> {
     return { code: 0, message: "ok", data: null };
   }
 
-  const { data } = await http.delete<ApiResponse<null>>(`/admin/pain-points/${id}`);
+  const { data } = await httpAdmin.delete<ApiResponse<null>>(`/admin/pain-points/${id}`);
   return data;
 }
 
@@ -133,73 +228,23 @@ export async function exportToExcel() {
     return;
   }
 
-  try {
-    const response = await http.get("/admin/reports/export/excel", {
-      responseType: "blob",
-      validateStatus: () => true,
-    });
+  await downloadResponseAsFile(
+    "/admin/reports/export/excel",
+    "痛点数据.xlsx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  );
+}
 
-    const contentType = String(response.headers["content-type"] || response.headers["Content-Type"] || "").toLowerCase();
-
-    if (contentType.includes("application/json") || contentType.includes("text/json")) {
-      const errorText = await response.data.text();
-      let message = "导出失败";
-
-      if (errorText) {
-        try {
-          const payload = JSON.parse(errorText) as { message?: string };
-          message = payload.message || message;
-        } catch {
-          message = errorText;
-        }
-      }
-
-      throw new Error(message);
-    }
-
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(`导出失败（${response.status}）`);
-    }
-
-    if (!response.data || response.data.size === 0) {
-      throw new Error("导出的数据为空");
-    }
-
-    const blob = response.data instanceof Blob
-      ? response.data
-      : new Blob([response.data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-    
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    
-    const contentDisposition = response.headers["content-disposition"] || response.headers["Content-Disposition"];
-    let filename = "痛点数据.xlsx";
-    if (contentDisposition) {
-      const utf8Match = contentDisposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
-      if (utf8Match && utf8Match[1]) {
-        try {
-          filename = decodeURIComponent(utf8Match[1]);
-        } catch {
-          filename = utf8Match[1];
-        }
-      } else {
-        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
-        if (match && match[1]) {
-          filename = match[1].replace(/['"]/g, "");
-        }
-      }
-    }
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-    
-  } catch (error) {
-    console.error("导出失败:", error);
-    throw error;
+export async function exportPainPointDataset(ids?: number[]) {
+  if (useMockApi) {
+    await sleep(100);
+    return;
   }
+
+  await downloadResponseAsFile(
+    "/admin/reports/export/dataset",
+    "数据集.csv",
+    "text/csv;charset=utf-8",
+    ids && ids.length > 0 ? { ids: ids.join(",") } : undefined,
+  );
 }

@@ -4,15 +4,22 @@ import com.example.socialpainpoint.repository.InMemoryPainPointRepository;
 import com.example.socialpainpoint.service.ReportService;
 import com.example.socialpainpoint.service.StatisticsService;
 import com.example.socialpainpoint.util.TimeFormats;
+import com.example.socialpainpoint.entity.PainPointReport;
 import com.example.socialpainpoint.vo.ReportSummaryVO;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,5 +107,69 @@ public class ReportServiceImpl implements ReportService {
     }
     
     return outputStream;
+  }
+
+  @Override
+  public ByteArrayOutputStream exportDatasetCsv(Collection<Long> ids) {
+    List<PainPointReport> reports = painPointRepository.findAll();
+    if (ids != null && !ids.isEmpty()) {
+      Set<Long> idSet = new HashSet<>(ids);
+      reports = reports.stream()
+        .filter(report -> report.id() != null && idSet.contains(report.id()))
+        .toList();
+    }
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+    try {
+      outputStream.write(0xEF);
+      outputStream.write(0xBB);
+      outputStream.write(0xBF);
+
+      try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
+        writeCsvRow(writer,
+          "ID",
+          "反馈场景",
+          "行业",
+          "内容摘要",
+          "提交时间",
+          "状态",
+          "分类"
+        );
+
+        for (PainPointReport report : reports) {
+          writeCsvRow(writer,
+            String.valueOf(report.id()),
+            report.sceneType(),
+            report.industryType(),
+            report.content(),
+            TimeFormats.format(report.submitTime()),
+            report.status(),
+            report.categoryName()
+          );
+        }
+
+        writer.flush();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("导出CSV失败", e);
+    }
+
+    return outputStream;
+  }
+
+  private void writeCsvRow(BufferedWriter writer, String... cells) throws IOException {
+    for (int i = 0; i < cells.length; i++) {
+      if (i > 0) {
+        writer.write(',');
+      }
+      writer.write(escapeCsv(cells[i]));
+    }
+    writer.write("\r\n");
+  }
+
+  private String escapeCsv(String value) {
+    String safe = value == null ? "" : value;
+    return "\"" + safe.replace("\"", "\"\"") + "\"";
   }
 }
