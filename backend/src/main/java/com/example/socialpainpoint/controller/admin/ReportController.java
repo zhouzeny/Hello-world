@@ -4,7 +4,9 @@ import com.example.socialpainpoint.common.ApiResponse;
 import com.example.socialpainpoint.service.ReportService;
 import com.example.socialpainpoint.util.TimeFormats;
 import com.example.socialpainpoint.vo.ReportSummaryVO;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,12 +34,15 @@ public class ReportController {
   @GetMapping("/export/excel")
   public ResponseEntity<byte[]> exportToExcel() {
     ByteArrayOutputStream outputStream = reportService.exportToExcel();
-    
+
     String filename = "痛点数据_" + TimeFormats.formatForFile(LocalDateTime.now()) + ".xlsx";
-    
+
     return ResponseEntity.ok()
-      .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-      .header(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+      .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+        .filename(filename, StandardCharsets.UTF_8)
+        .build()
+        .toString())
+      .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
       .body(outputStream.toByteArray());
   }
 }

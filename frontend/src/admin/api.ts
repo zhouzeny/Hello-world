@@ -136,15 +136,40 @@ export async function exportToExcel() {
   try {
     const response = await http.get("/admin/reports/export/excel", {
       responseType: "blob",
+      validateStatus: () => true,
     });
+
+    const contentType = String(response.headers["content-type"] || response.headers["Content-Type"] || "").toLowerCase();
+
+    if (contentType.includes("application/json") || contentType.includes("text/json")) {
+      const errorText = await response.data.text();
+      let message = "导出失败";
+
+      if (errorText) {
+        try {
+          const payload = JSON.parse(errorText) as { message?: string };
+          message = payload.message || message;
+        } catch {
+          message = errorText;
+        }
+      }
+
+      throw new Error(message);
+    }
+
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`导出失败（${response.status}）`);
+    }
 
     if (!response.data || response.data.size === 0) {
       throw new Error("导出的数据为空");
     }
 
-    const blob = new Blob([response.data], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+    const blob = response.data instanceof Blob
+      ? response.data
+      : new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
     
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -153,16 +178,25 @@ export async function exportToExcel() {
     const contentDisposition = response.headers["content-disposition"] || response.headers["Content-Disposition"];
     let filename = "痛点数据.xlsx";
     if (contentDisposition) {
-      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-      if (match && match[1]) {
-        filename = match[1].replace(/['"]/g, "");
+      const utf8Match = contentDisposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+      if (utf8Match && utf8Match[1]) {
+        try {
+          filename = decodeURIComponent(utf8Match[1]);
+        } catch {
+          filename = utf8Match[1];
+        }
+      } else {
+        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
+        if (match && match[1]) {
+          filename = match[1].replace(/['"]/g, "");
+        }
       }
     }
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     
   } catch (error) {
     console.error("导出失败:", error);
